@@ -1,0 +1,17 @@
+{
+  "name": "taskflow-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run start:dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "postinstall": "npm --workspace backend run postinstall"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}
