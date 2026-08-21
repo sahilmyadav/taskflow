@@ -40,7 +40,8 @@ interface ThemeState {
   resolved: "light" | "dark";
   setTheme: (t: Theme) => void;
   setColorMode: (c: ColorMode) => void;
-  init: () => void;
+  /** Applies stored preferences and returns a cleanup for the media listener. */
+  init: () => () => void;
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
@@ -76,5 +77,6 @@ export const useThemeStore = create<ThemeState>((set) => ({
       }
     };
     mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
   },
 }));

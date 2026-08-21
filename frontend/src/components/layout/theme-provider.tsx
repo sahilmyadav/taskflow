@@ -13,9 +13,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // syncs the store with it, and re-applies the attributes after React's Strict
   // Mode remount in development clears them (a no-op in production). It runs
   // before paint, so no flash is introduced.
-  useIsomorphicLayoutEffect(() => {
-    init();
-  }, [init]);
+  useIsomorphicLayoutEffect(() => init(), [init]);
 
   return <>{children}</>;
 }
