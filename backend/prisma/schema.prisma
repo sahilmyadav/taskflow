@@ -1,34 +1,38 @@
-// Prisma schema for Task Management System
-// SQLite for zero-config local dev (swap to postgres by changing provider + DATABASE_URL)
+// Prisma schema — PostgreSQL (Aiven) — matches 20260821010000_init_postgres
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
+  email     String?  @unique
+  fullName  String?
+  title     String?
   isGuest   Boolean  @default(false)
+  avatarUrl String?
+  colorMode String?  @default("Black")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  tasks     Task[]
+
+  tasks    Task[]
+  projects Project[]
 
   @@map("users")
 }
 
-model Task {
+model Project {
   id          String    @id @default(cuid())
   title       String
   description String?
-  status      TaskStatus @default(TODO)
-  priority    Priority   @default(MEDIUM)
-  category    String?
-  tags        String?
+  priority    Priority  @default(MEDIUM)
+  lead        String?
   dueDate     DateTime?
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
@@ -37,19 +41,81 @@ model Task {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  tasks Task[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  category    String?
+  tags        String?
+  dueDate     DateTime?
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  subtasks Subtask[]
+  comments Comment[]
+
   @@index([userId, status])
   @@index([userId, createdAt])
+  @@index([projectId])
   @@map("tasks")
+}
+
+model Subtask {
+  id        String   @id @default(cuid())
+  title     String
+  priority  Priority @default(MEDIUM)
+  assignee  String?
+  dueDate   DateTime?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("subtasks")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  author    String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@map("comments")
 }
 
 enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
+  ON_HOLD
 }
 
 enum Priority {
+  NONE
   LOW
   MEDIUM
   HIGH
+  URGENT
 }
