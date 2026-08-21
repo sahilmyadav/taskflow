@@ -1,18 +1,12 @@
 "use client";
 
 import { create } from "zustand";
+import { THEME_COLORS, DEFAULT_COLOR_MODE } from "@/lib/theme-script";
+import type { ColorMode } from "@/types/task";
 
 export type Theme = "light" | "dark" | "system";
-export type ColorMode = "Amber" | "Blue" | "Pink" | "Rose" | "Emerald" | "Black";
+export type { ColorMode };
 
-const colorVars: Record<ColorMode, string> = {
-  Amber: "38 92% 50%",
-  Blue: "221 83% 53%",
-  Pink: "330 81% 60%",
-  Rose: "347 77% 50%",
-  Emerald: "142 76% 36%",
-  Black: "240 5.9% 10%",
-};
 
 function getSystem(): "light" | "dark" {
   if (typeof window === "undefined") return "light";
@@ -31,11 +25,11 @@ function applyTheme(theme: Theme): "light" | "dark" {
 
 function applyColor(mode: ColorMode) {
   const root = document.documentElement;
-  const hsl = colorVars[mode] || colorVars.Black;
+  const hsl = THEME_COLORS[mode] || THEME_COLORS[DEFAULT_COLOR_MODE];
   root.style.setProperty("--accent-color", `hsl(${hsl})`);
   root.style.setProperty("--primary", hsl);
   // keep foreground readable
-  if (mode === "Black") {
+  if (mode === DEFAULT_COLOR_MODE) {
     root.style.removeProperty("--accent-color");
   }
 }
@@ -51,7 +45,7 @@ interface ThemeState {
 
 export const useThemeStore = create<ThemeState>((set) => ({
   theme: "system",
-  colorMode: "Black",
+  colorMode: DEFAULT_COLOR_MODE,
   resolved: "light",
 
   setTheme: (theme) => {
@@ -68,7 +62,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
 
   init: () => {
     const saved = (localStorage.getItem("theme") as Theme) || "system";
-    const color = (localStorage.getItem("colorMode") as ColorMode) || "Black";
+    const color = (localStorage.getItem("colorMode") as ColorMode) || DEFAULT_COLOR_MODE;
     const resolved = applyTheme(saved);
     applyColor(color);
     set({ theme: saved, colorMode: color, resolved });
