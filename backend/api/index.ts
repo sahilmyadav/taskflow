@@ -1,66 +1,35 @@
-// Vercel serverless entry point for NestJS
-// Vercel will call the default export as a Node.js serverless function.
-// We cache the Nest app between invocations (warm Lambda) to avoid cold boot overhead.
+// Vercel serverless entry point. Vercel invokes the default export per request.
+import type { IncomingMessage, ServerResponse } from 'http';
+import type { INestApplication } from '@nestjs/common';
+import { createApp } from '../src/bootstrap';
 
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
-import { AppModule } from '../src/app.module';
+type NodeHandler = (req: IncomingMessage, res: ServerResponse) => void;
 
-let cachedApp: any = null;
+// Cache the app across invocations on a warm instance. The in-flight promise is
+// cached too, so concurrent cold requests build the app once instead of racing.
+let cachedApp: INestApplication | null = null;
+let pendingApp: Promise<INestApplication> | null = null;
 
-async function createApp() {
-  const app = await NestFactory.create(AppModule);
-
-  const config = app.get(ConfigService);
-  const frontendUrl = config.get<string>('frontendUrl');
-
-  app.use(helmet());
-  app.use(cookieParser());
-
-  // In production on Vercel, allow the deployed frontend URL.
-  // You can also set FRONTEND_URL to "*" during testing, but prefer exact origin.
-  const allowedOrigins = [
-    frontendUrl || 'http://localhost:3000',
-    'http://localhost:3000',
-    'http://localhost:3001',
-  ].filter(Boolean);
-
-  app.enableCors({
-    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
-      // Allow requests with no origin (mobile apps, curl, health checks)
-      if (!origin) return cb(null, true);
-      // Allow any vercel.app subdomain if FRONTEND_URL not set explicitly
-      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-        return cb(null, true);
-      }
-      return cb(null, true); // be permissive for now; tighten after you set FRONTEND_URL
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: false,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
-
-  app.setGlobalPrefix('api');
-  await app.init();
-  return app;
+function getApp(): Promise<INestApplication> {
+  if (cachedApp) return Promise.resolve(cachedApp);
+  pendingApp ??= createApp()
+    .then(async (app) => {
+      await app.init();
+      cachedApp = app;
+      return app;
+    })
+    .catch((err) => {
+      pendingApp = null; // let the next request retry a failed cold start
+      throw err;
+    });
+  return pendingApp;
 }
 
-export default async function handler(req: any, res: any) {
-  if (!cachedApp) {
-    cachedApp = await createApp();
-  }
-  const instance = cachedApp.getHttpAdapter().getInstance();
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse,
+) {
+  const app = await getApp();
+  const instance = app.getHttpAdapter().getInstance() as NodeHandler;
   return instance(req, res);
 }
