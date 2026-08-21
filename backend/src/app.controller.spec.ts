@@ -15,8 +15,14 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return health status', () => {
+      expect(appController.health()).toHaveProperty('status', 'ok');
+    });
+    it('should return API info', () => {
+      expect(appController.root()).toHaveProperty(
+        'name',
+        'Task Management API',
+      );
     });
   });
 });

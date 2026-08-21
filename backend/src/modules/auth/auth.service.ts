@@ -11,10 +11,14 @@ export class AuthService {
   ) {}
 
   async guestLogin(username?: string) {
-    const baseName = (username?.trim() || `Guest_${uuidv4().slice(0, 6)}`).slice(0, 30);
+    const baseName = (
+      username?.trim() || `Guest_${uuidv4().slice(0, 6)}`
+    ).slice(0, 30);
     // ensure uniqueness
     let finalName = baseName;
-    const exists = await this.prisma.user.findUnique({ where: { username: finalName } });
+    const exists = await this.prisma.user.findUnique({
+      where: { username: finalName },
+    });
     if (exists) {
       finalName = `${baseName}_${uuidv4().slice(0, 4)}`;
     }
@@ -35,6 +39,16 @@ export class AuthService {
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) return null;
-    return { id: user.id, username: user.username, isGuest: user.isGuest, createdAt: user.createdAt };
+    return {
+      id: user.id,
+      username: user.username,
+      isGuest: user.isGuest,
+      email: user.email,
+      fullName: user.fullName,
+      title: user.title,
+      avatarUrl: user.avatarUrl,
+      colorMode: user.colorMode,
+      createdAt: user.createdAt,
+    };
   }
 }

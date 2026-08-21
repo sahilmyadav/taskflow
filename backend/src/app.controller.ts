@@ -12,6 +12,10 @@ export class AppController {
   @Public()
   @Get()
   root() {
-    return { name: 'Task Management API', version: '1.0.0', docs: '/api/health' };
+    return {
+      name: 'Task Management API',
+      version: '1.0.0',
+      docs: '/api/health',
+    };
   }
 }
