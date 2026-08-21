@@ -12,6 +12,7 @@
     "postinstall": "npm --workspace backend run postinstall"
   },
   "devDependencies": {
-    "concurrently": "^9.2.4"
+    "concurrently": "^9.2.4",
+    "vercel": "^59.3.0"
   }
 }

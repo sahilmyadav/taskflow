@@ -8,7 +8,8 @@ Full-stack task management app built for the Full Stack Developer technical asse
 | **Backend** | NestJS 11, Prisma 6, TypeScript |
 | **Database** | PostgreSQL |
 | **Auth** | Guest login, JWT bearer tokens |
-| **Live demo** | _replace this line with the deployed URL before submitting_ |
+| **Live app** | https://taskflow-web-plum.vercel.app |
+| **Live API** | https://taskflow-api-kohl.vercel.app/api |
 
 ---
 
