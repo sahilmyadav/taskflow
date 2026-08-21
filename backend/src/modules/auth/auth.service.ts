@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { Prisma, User } from '@prisma/client';
 
@@ -30,7 +30,7 @@ export class AuthService {
 
   async guestLogin(username?: string) {
     const baseName = (
-      username?.trim() || `Guest_${uuidv4().slice(0, 6)}`
+      username?.trim() || `Guest_${randomUUID().slice(0, 6)}`
     ).slice(0, 30);
 
     // The check-then-create below races with concurrent guest logins, and the
@@ -41,7 +41,7 @@ export class AuthService {
       const candidate =
         attempt === 0
           ? baseName
-          : `${baseName.slice(0, 25)}_${uuidv4().slice(0, 4)}`;
+          : `${baseName.slice(0, 25)}_${randomUUID().slice(0, 4)}`;
       const taken = await this.prisma.user.findUnique({
         where: { username: candidate },
       });
@@ -98,7 +98,7 @@ export class AuthService {
     const existsName = await this.prisma.user.findUnique({
       where: { username: finalUsername },
     });
-    if (existsName) finalUsername = `${username}_${uuidv4().slice(0, 4)}`;
+    if (existsName) finalUsername = `${username}_${randomUUID().slice(0, 4)}`;
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
