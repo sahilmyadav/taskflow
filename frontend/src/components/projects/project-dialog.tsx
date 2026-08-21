@@ -76,7 +76,7 @@ export function ProjectDialog({
       else await createProject(payload);
       onOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err));
+      const m=getErrorMessage(err); setError(m.toLowerCase().includes('guest limit')?m+' Create an account to unlock unlimited.':m);
     } finally {
       setLoading(false);
     }

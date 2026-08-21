@@ -1,6 +1,6 @@
-export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE" | "ON_HOLD";
-export type Priority = "NONE" | "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-export type ColorMode = "Amber" | "Blue" | "Pink" | "Rose" | "Emerald" | "Black";
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'ON_HOLD';
+export type Priority = 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type ColorMode = 'Amber' | 'Blue' | 'Pink' | 'Rose' | 'Emerald' | 'Black';
 
 export interface Subtask {
   id: string;
@@ -80,9 +80,11 @@ export interface User {
   avatarUrl?: string | null;
   colorMode?: ColorMode | string | null;
   createdAt?: string;
+  quota?: { maxTasks: number; maxProjects: number } | null;
+  usage?: { tasks: number; projects: number } | null;
 }
 
-export type ViewMode = "board" | "list";
+export type ViewMode = 'board' | 'list';
 export type FieldsConfig = {
   priority: boolean;
   members: boolean;

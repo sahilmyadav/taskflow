@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
+/**
+ * TaskFlow mark — traced from the user image (white sunburst on black).
+ * Vector: black rounded square + 14 white ellipses around center. No external asset, no CDN.
+ * Works crisp at any size (viewBox 0 0 100 100). Dark mode + light mode: always black tile with white burst.
+ */
 export function BrandMark({
   size = 32,
   className,
@@ -12,71 +17,63 @@ export function BrandMark({
   className?: string;
   rounded?: number;
 }) {
-  const uid = React.useId();
-  const gradId = `tf-grad-${uid.replace(/:/g, '')}`;
-  const shadowId = `tf-shadow-${uid.replace(/:/g, '')}`;
-  // keep svg crisp: viewBox 0 0 32 32, rect rx based on size
-  const rx = Math.round((rounded * 32) / size);
+  const rx = Math.round((rounded * 100) / size);
+  // angles + shape tuned to match uploaded image (thin top, fatter east/south-east)
+  // 14 petals: angle, rx, ry — left side slightly narrower for that 3d feel
+  const petals: { angle: number; rx: number; ry: number }[] = [
+    { angle: 0, rx: 3.2, ry: 16 },
+    { angle: 18, rx: 3.4, ry: 15.5 },
+    { angle: 41, rx: 6.2, ry: 13.2 },
+    { angle: 63, rx: 6.8, ry: 12.6 },
+    { angle: 86, rx: 7.2, ry: 11.8 },
+    { angle: 109, rx: 7.0, ry: 12.4 },
+    { angle: 133, rx: 6.9, ry: 13.0 },
+    { angle: 160, rx: 5.8, ry: 14.2 },
+    { angle: 185, rx: 5.0, ry: 15.0 },
+    { angle: 208, rx: 5.6, ry: 13.8 },
+    { angle: 232, rx: 5.8, ry: 12.8 },
+    { angle: 260, rx: 6.9, ry: 11.4 },
+    { angle: 285, rx: 6.5, ry: 12.0 },
+    { angle: 320, rx: 3.6, ry: 15.0 },
+  ];
+
   return (
     <span
       aria-label="TaskFlow"
       role="img"
       style={{ width: size, height: size }}
       className={cn(
-        'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-lg ring-1 ring-black/5 dark:ring-white/10',
+        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-lg ring-1 ring-black/15 dark:ring-white/10",
         className
       )}
     >
       <svg
         width={size}
         height={size}
-        viewBox="0 0 32 32"
+        viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
+        shapeRendering="geometricPrecision"
       >
-        <rect width={32} height={32} rx={rx} fill={`url(#${gradId})`} />
-        {/* subtle glass highlight */}
-        <rect width={32} height={32} rx={rx} fill="white" fillOpacity={0.07} />
-        <rect
-          x={0.5}
-          y={0.5}
-          width={31}
-          height={31}
-          rx={rx - 0.5}
-          stroke="white"
-          strokeOpacity={0.14}
-        />
-        {/* double check — conveys “tasks / layers” */}
-        <g filter={`url(#${shadowId})`}>
-          <path
-            d="M10 16.35L13.85 20.2L22.25 11.05L20.85 9.65L13.85 17.25L11.4 14.95L10 16.35Z"
-            fill="white"
-          />
-          <path
-            d="M10 19.35L13.85 23.2L22.25 14.05L21.45 13.25L13.85 20.65L10.8 18.55L10 19.35Z"
-            fill="white"
-            opacity={0.92}
-          />
+        <rect width={100} height={100} rx={rx} fill="#0a0a0a" />
+        {/* soft inner highlight like the reference */}
+        <rect width={100} height={100} rx={rx} fill="white" fillOpacity={0.04} />
+        <rect x={0.7} y={0.7} width={98.6} height={98.6} rx={rx - 0.7} stroke="white" strokeOpacity={0.09} />
+        <g fill="white">
+          {petals.map((p, i) => (
+            <ellipse
+              key={i}
+              cx={50}
+              cy={20}
+              rx={p.rx}
+              ry={p.ry}
+              transform={`rotate(${p.angle} 50 50)`}
+            />
+          ))}
         </g>
-        <defs>
-          <linearGradient id={gradId} x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#7C3AED" />
-            <stop offset="0.55" stopColor="#6366F1" />
-            <stop offset="1" stopColor="#2563EB" />
-          </linearGradient>
-          <filter
-            id={shadowId}
-            x="8"
-            y="7"
-            width="16.5"
-            height="18.5"
-            filterUnits="userSpaceOnUse"
-            colorInterpolationFilters="sRGB"
-          >
-            <feDropShadow dx={0} dy={1} stdDeviation={1} floodOpacity={0.22} />
-          </filter>
-        </defs>
+        {/* tiny center hole to match reference negative space */}
+        <circle cx={50} cy={50} r={10.5} fill="#0a0a0a" />
       </svg>
     </span>
   );
@@ -92,7 +89,7 @@ export function BrandWordmark({
   className?: string;
 }) {
   return (
-    <span className={cn('inline-flex items-center gap-2.5', className)}>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BrandMark size={size} />
       {showText && (
         <span className="flex flex-col leading-none">
@@ -108,5 +105,4 @@ export function BrandWordmark({
   );
 }
 
-// convenient alias for header / sidebar where only the mark is needed
 export const BrandLogo = BrandMark;

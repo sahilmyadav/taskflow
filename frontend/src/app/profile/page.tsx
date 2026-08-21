@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Search, Pencil, Check } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { getErrorMessage } from '@/lib/errors';
@@ -46,7 +47,7 @@ export default function ProfilePage() {
   }, [init]);
 
   useEffect(() => {
-    if (!isAuthenticated && typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
+    if (!isAuthenticated && typeof window !== 'undefined' && !localStorage.getItem('accessToken') && !sessionStorage.getItem('accessToken')) {
       router.replace('/login');
     }
   }, [isAuthenticated, router]);
@@ -74,9 +75,11 @@ export default function ProfilePage() {
     );
   }
 
-  const displayEmail =
-    form.email || `${(user.username || 'dexter').toLowerCase().replace(/\s+/g, '')}@gmail.com`;
-  const avatar = user.avatarUrl || `https://i.pravatar.cc/100?img=68`;
+  const isGuest = !!user.isGuest;
+  const displayEmail = isGuest
+    ? 'Guest • Session only — no email'
+    : form.email || `${(user.username || 'dexter').toLowerCase().replace(/\s+/g, '')}@gmail.com`;
+  const avatar = isGuest ? '/guest-avatar.png' : user.avatarUrl || `https://i.pravatar.cc/100?img=68`;
 
   const save = async (patch: Partial<User>) => {
     setSaving(true);
@@ -182,10 +185,31 @@ export default function ProfilePage() {
         <div className="mx-auto max-w-[820px] p-4 sm:p-8">
           {/* page header */}
           <div className="mb-6">
-            <h1 className="text-xl font-semibold tracking-tight">Profile</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Profile {isGuest && <span className="ml-2 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold tracking-widest text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">GUEST • SESSION • LIMITED</span>}</h1>
             <p className="mt-1 text-sm text-zinc-500">
-              Manage your personal information and workspace access.
+              {isGuest ? 'You are in Guest mode — no email, saved only in this session. Limit: 10 tasks, 3 projects. Create an account for unlimited.' : 'Manage your personal information and workspace access.'}
             </p>
+            {isGuest && (
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-950/20">
+                <Image
+                  src="/guest-avatar.png"
+                  alt="Guest mascot"
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 rounded-xl object-cover ring-1 ring-amber-200 dark:ring-amber-900/30"
+                />
+                <div className="flex-1 text-sm leading-tight">
+                  <p className="font-semibold text-amber-900 dark:text-amber-100">{user.username} • Guest session</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">{user.usage ? `${user.usage.tasks}/${user.quota?.maxTasks ?? 10} tasks used` : 'Free limited'} • {user.usage ? `${user.usage.projects}/${user.quota?.maxProjects ?? 3} projects` : ''}</p>
+                </div>
+                <Link
+                  href="/login"
+                  className="shrink-0 rounded-full bg-amber-500 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-600"
+                >
+                  Create account →
+                </Link>
+              </div>
+            )}
 
             {/* mobile tabs */}
             <div className="mt-4 flex gap-2 md:hidden">

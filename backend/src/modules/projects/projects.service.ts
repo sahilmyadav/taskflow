@@ -1,15 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { QueryProjectDto } from './dto/query-project.dto';
 import { Prisma } from '@prisma/client';
+import { GUEST_LIMITS } from '../auth/auth.service';
 
 @Injectable()
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateProjectDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (user?.isGuest) {
+      const count = await this.prisma.project.count({ where: { userId } });
+      if (count >= GUEST_LIMITS.maxProjects) {
+        throw new ForbiddenException(
+          `Guest limit reached: max ${GUEST_LIMITS.maxProjects} projects. Create an account for unlimited projects.`,
+        );
+      }
+    }
     const data: Prisma.ProjectCreateInput = {
       title: dto.title.trim(),
       description: dto.description?.trim() || null,

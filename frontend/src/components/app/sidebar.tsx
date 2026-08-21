@@ -52,8 +52,13 @@ function UserCard() {
   }, []);
 
   const displayName = user?.fullName || user?.username || 'Dexter';
-  const email =
-    user?.email || `${(user?.username || 'dexter').toLowerCase().replace(/\s+/g, '')}@gmail.com`;
+  const isGuest = !!user?.isGuest;
+  const email = isGuest
+    ? 'Guest • Session only • No email'
+    : user?.email || `${(user?.username || 'dexter').toLowerCase().replace(/\s+/g, '')}@gmail.com`;
+  const avatarSrc = isGuest
+    ? '/guest-avatar.png'
+    : user?.avatarUrl || 'https://i.pravatar.cc/100?img=68';
 
   return (
     <div className="relative" ref={ref}>
@@ -61,7 +66,7 @@ function UserCard() {
         onClick={() => setOpen(v => !v)}
         className="flex w-full items-center gap-2 rounded-xl px-2 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900"
       >
-        <Avatar src={user?.avatarUrl || 'https://i.pravatar.cc/100?img=68'} className="h-7 w-7" />
+        <Avatar src={avatarSrc} className="h-7 w-7 ring-1 ring-zinc-200 dark:ring-zinc-800" />
         <div className="min-w-0 flex-1 text-left">
           <p className="truncate text-sm font-semibold leading-none">{displayName}</p>
           <p className="truncate text-[11px] text-zinc-500">{email}</p>
@@ -82,11 +87,24 @@ function UserCard() {
           >
             <div className="flex flex-col items-center gap-1 border-b border-zinc-100 px-3 py-3 dark:border-zinc-800">
               <Avatar
-                src={user?.avatarUrl || 'https://i.pravatar.cc/100?img=68'}
-                className="h-10 w-10"
+                src={avatarSrc}
+                className="h-10 w-10 ring-1 ring-zinc-200 dark:ring-zinc-800"
               />
               <p className="text-sm font-semibold">{displayName}</p>
               <p className="text-xs text-zinc-500">{email}</p>
+              {isGuest && (
+                <span className="mt-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold tracking-widest text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                  GUEST • {user?.usage ? `${user.usage.tasks}/${user?.quota?.maxTasks ?? 10} tasks` : 'Limited free'} • Session
+                </span>
+              )}
+              {isGuest && (
+                <button
+                  onClick={() => router.push('/login')}
+                  className="mt-2 w-full rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600"
+                >
+                  Create account — unlock unlimited
+                </button>
+              )}
             </div>
 
             <div className="mt-1 space-y-1">

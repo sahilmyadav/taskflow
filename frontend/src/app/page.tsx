@@ -18,6 +18,7 @@ import { Toaster, useToastStore } from '@/components/app/toast';
 import { Button } from '@/components/ui/button';
 import { Plus, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { BrandMark } from '@/components/brand/brand-mark';
 import {
   DndContext,
@@ -93,6 +94,10 @@ export default function HomePage() {
   const onHold = filtered.filter(t => t.status === 'ON_HOLD');
 
   const openCreate = (status: Task['status'] = 'TODO') => {
+    if (user?.isGuest && user.usage && user.quota && user.usage.tasks >= user.quota.maxTasks) {
+      push({ title: `Guest limit: ${user.quota.maxTasks} tasks max. Create an account for unlimited.`, type: 'error' });
+      return;
+    }
     setCreateStatus(status);
     setEditing(null);
     setDialogOpen(true);
@@ -338,6 +343,32 @@ export default function HomePage() {
               onChange={setFields}
             />
           </div>
+          {user?.isGuest && (
+            <div className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 dark:border-amber-900/30 dark:bg-amber-950/20">
+              <div className="flex items-center gap-2.5">
+                <Image
+                  src="/guest-avatar.png"
+                  alt="Guest"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-lg object-cover shadow-sm ring-1 ring-amber-200 dark:ring-amber-900/30"
+                />
+                <div className="leading-tight">
+                  <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                    Guest mode — <span className="font-bold">{user.usage ? `${user.usage.tasks}/${user.quota?.maxTasks ?? 10}` : 'Free'} tasks</span>
+                    {user.usage && user.quota ? ` • ${user.usage.projects}/${user.quota.maxProjects} projects` : ''} • Session only
+                  </p>
+                  <p className="text-[11px] text-amber-700 dark:text-amber-300">No email needed. Limit: 10 tasks, 3 projects. Create account for unlimited.</p>
+                </div>
+              </div>
+              <a
+                href="/login"
+                className="hidden shrink-0 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 sm:inline-flex"
+              >
+                Create account →
+              </a>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-auto">

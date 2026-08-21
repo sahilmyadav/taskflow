@@ -119,7 +119,13 @@ export function TaskDialog({
       }
       onOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      // If guest hit limit, show explicit upgrade hint
+      if (msg.toLowerCase().includes('guest limit') || msg.toLowerCase().includes('limit reached')) {
+        setError(msg + ' Go to Login → Create account to unlock unlimited.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

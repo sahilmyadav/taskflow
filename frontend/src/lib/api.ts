@@ -9,7 +9,8 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
+    const token =
+      localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -21,10 +22,10 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("isGuestSession");
       if (!window.location.pathname.includes("/login")) {
-        // Hard navigation on purpose: this runs outside React (no router available
-        // in a module-scope interceptor) and a full reload clears any in-memory
-        // state left over from the expired session.
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = "/login";
       }

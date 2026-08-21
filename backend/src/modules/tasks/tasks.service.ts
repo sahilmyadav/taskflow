@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTaskDto } from './dto/query-task.dto';
 import { Prisma, Task, Subtask, Comment, TaskStatus } from '@prisma/client';
+import { GUEST_LIMITS } from '../auth/auth.service';
 
 /** A task row, optionally hydrated with its relations. */
 type TaskWithRelations = Task & {
@@ -33,6 +38,16 @@ export class TasksService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateTaskDto) {
+    // Enforce guest limit: maxTasks (free tier, not unlimited)
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (user?.isGuest) {
+      const count = await this.prisma.task.count({ where: { userId } });
+      if (count >= GUEST_LIMITS.maxTasks) {
+        throw new ForbiddenException(
+          `Guest limit reached: max ${GUEST_LIMITS.maxTasks} tasks. Create an account for unlimited tasks.`,
+        );
+      }
+    }
     const data: Prisma.TaskCreateInput = {
       title: dto.title.trim(),
       description: dto.description?.trim() || null,

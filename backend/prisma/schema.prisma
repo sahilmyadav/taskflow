@@ -10,16 +10,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  email     String?  @unique
-  fullName  String?
-  title     String?
-  isGuest   Boolean  @default(false)
-  avatarUrl String?
-  colorMode String?  @default("Black")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String?  @unique
+  passwordHash String?
+  fullName     String?
+  title        String?
+  isGuest      Boolean  @default(false)
+  avatarUrl    String?
+  colorMode    String?  @default("Black")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   tasks    Task[]
   projects Project[]
