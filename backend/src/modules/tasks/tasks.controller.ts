@@ -1,8 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTaskDto } from './dto/query-task.dto';
+import { BulkStatusDto } from './dto/bulk-status.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('tasks')
@@ -24,22 +34,22 @@ export class TasksController {
     return this.tasksService.stats(user.id);
   }
 
-  @Get(':id')
-  findOne(@CurrentUser() user: { id: string }, @Param('id') id: string) {
-    return this.tasksService.findOne(user.id, id);
-  }
-
   @Patch('bulk/status')
-  bulkStatus(
-    @CurrentUser() user: { id: string },
-    @Body() body: { ids: string[]; status: string },
-  ) {
+  bulkStatus(@CurrentUser() user: { id: string }, @Body() body: BulkStatusDto) {
     return this.tasksService.bulkUpdate(user.id, body.ids, body.status);
   }
 
   @Patch('reorder')
-  reorder(@CurrentUser() user: { id: string }, @Body() body: { orderedIds: string[] }) {
+  reorder(
+    @CurrentUser() user: { id: string },
+    @Body() body: { orderedIds: string[] },
+  ) {
     return this.tasksService.reorder(user.id, body.orderedIds);
+  }
+
+  @Get(':id')
+  findOne(@CurrentUser() user: { id: string }, @Param('id') id: string) {
+    return this.tasksService.findOne(user.id, id);
   }
 
   @Patch(':id')
