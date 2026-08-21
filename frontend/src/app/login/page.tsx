@@ -1,45 +1,95 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { ArrowRight, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAuthStore } from "@/stores/auth-store";
-import { Sparkles, ArrowRight, User } from "lucide-react";
+
 export default function LoginPage() {
   const router = useRouter();
   const { guestLogin, isAuthenticated, loading, error, init } = useAuthStore();
-  const [username, setUsername] = useState("");
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+
   useEffect(() => { init(); }, [init]);
   useEffect(() => { if (isAuthenticated) router.replace("/"); }, [isAuthenticated, router]);
+
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setLocalError(null);
-    try { await guestLogin(username.trim() || undefined); router.replace("/"); } catch (err: any) { setLocalError(err.message); }
+    e.preventDefault();
+    try {
+      await guestLogin(name.trim() || undefined);
+      router.replace("/");
+    } catch {}
   };
+
+  const quick = async () => {
+    try { await guestLogin(undefined); router.replace("/"); } catch {}
+  };
+
   return (
-    <div className="mx-auto flex max-w-6xl flex-col items-center px-4 py-12 sm:py-16">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"><User className="h-6 w-6" /></div>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight">Welcome back</h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Continue as guest — no password needed. Your tasks are scoped to this guest profile.</p>
-        </div>
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-amber-500" /> Guest Login</CardTitle><CardDescription>Enter a display name or leave blank for an auto-generated guest.</CardDescription></CardHeader>
-          <CardContent>
-            <form onSubmit={submit} className="space-y-4">
-              <div><label className="text-sm font-medium">Display name (optional)</label><Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g., Alex" maxLength={30} className="mt-1" /><p className="mt-1 text-xs text-zinc-500">Letters, numbers, spaces, _ and - only.</p></div>
-              {(localError || error) && <div className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">{localError || error}</div>}
-              <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Continue as Guest"} <ArrowRight className="h-4 w-4" /></Button>
-              <p className="text-center text-xs text-zinc-500">By continuing you agree to local guest scoping. JWT is stored in localStorage and sent as Bearer token.</p>
-            </form>
-          </CardContent>
-        </Card>
-        <div className="mt-6 rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-          <h4 className="text-sm font-medium">How it works</h4>
-          <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400"><li>POST /api/auth/guest creates a guest user + JWT.</li><li>All /api/tasks routes are JWT-protected and user-scoped.</li><li>Theme choice is persisted in localStorage and applied on hydration.</li></ol>
-        </div>
+    <div className="min-h-screen bg-[#fcfcfc] dark:bg-zinc-950">
+      <div className="pointer-events-none absolute inset-0 grid-bg opacity-[0.04]" />
+      <div className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-4 py-10">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 28 }}
+          className="w-full max-w-md"
+        >
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-[11px] font-semibold tracking-[0.14em] text-zinc-400">PYRAMID • TASKFLOW</p>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">Let&apos;s get back on track</h1>
+            <p className="mt-1 text-sm text-zinc-500">Enter your email below to login to your account.</p>
+          </div>
+
+          <Card className="mt-6 rounded-2xl shadow-lg">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Continue as Guest</CardTitle>
+              <CardDescription className="text-xs">No password needed — we&apos;ll create a workspace for you.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={submit} className="space-y-3">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Display name (optional)"
+                  className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900"
+                  maxLength={30}
+                />
+                {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600 dark:bg-red-950/30 dark:text-red-300">{error}</p>}
+                <Button type="submit" disabled={loading} className="h-10 w-full rounded-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900">
+                  {loading ? "Signing in…" : "Continue as Guest"} <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="outline" onClick={quick} disabled={loading} className="h-10 w-full rounded-full">
+                  <Sparkles className="h-4 w-4" /> Quick guest
+                </Button>
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white text-sm font-medium text-zinc-700 opacity-60 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-bold shadow">G</span> Login with Google
+                </button>
+                <p className="pt-1 text-center text-[11px] leading-relaxed text-zinc-400">
+                  By clicking continue, you agree to our <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-zinc-500">
+            <Users className="h-3.5 w-3.5" /> Trusted by teams • Free forever for guests
+          </div>
+        </motion.div>
       </div>
     </div>
   );
