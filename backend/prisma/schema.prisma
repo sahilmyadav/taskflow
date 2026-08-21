@@ -2,6 +2,9 @@
 
 generator client {
   provider = "prisma-client-js"
+  // "native" for local dev; Vercel's Node runtime is Amazon Linux 2023, which
+  // needs the rhel-openssl-3.0.x engine or the function fails at cold start.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
