@@ -361,12 +361,12 @@ export default function HomePage() {
                   <p className="text-[11px] text-amber-700 dark:text-amber-300">No email needed. Limit: 10 tasks, 3 projects. Create account for unlimited.</p>
                 </div>
               </div>
-              <a
+              <Link
                 href="/login"
                 className="hidden shrink-0 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600 sm:inline-flex"
               >
                 Create account →
-              </a>
+              </Link>
             </div>
           )}
         </div>
