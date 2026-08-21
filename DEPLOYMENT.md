@@ -14,7 +14,7 @@ Vercel hosts Next.js natively and also hosts Node/Express/NestJS as Serverless F
 
 ### 1. Prerequisites
 
-- PostgreSQL reachable from Vercel (you already use Aiven — keep it). Ensure `DATABASE_URL` includes `?sslmode=require&connection_limit=10&pool_timeout=20` and that your Aiven firewall allows `0.0.0.0/0` or Vercel IPs.
+- PostgreSQL reachable from Vercel (Aiven/Neon/Supabase all work). Ensure `DATABASE_URL` includes `?sslmode=require&connection_limit=1&pool_timeout=20` — serverless functions each open their own pool, so keep the limit at 1 and that your Aiven firewall allows `0.0.0.0/0` or Vercel IPs.
 - Push this repo to GitHub.
 
 ### 2. Deploy backend to Vercel
@@ -33,7 +33,7 @@ In Vercel Dashboard → **Add New Project** → Import your GitHub repo:
 **Environment variables** (Project → Settings → Environment Variables — add for Production + Preview):
 
 ```
-DATABASE_URL="postgres://avnadmin:...@pg-a3dd8a-...aivencloud.com:12935/defaultdb?sslmode=require&connection_limit=10&pool_timeout=20"
+DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require&connection_limit=1&pool_timeout=20"
 JWT_SECRET="openssl rand -base64 32  — generate a new one, don't reuse dev-secret"
 JWT_EXPIRES_IN="7d"
 FRONTEND_URL="https://YOUR-FRONTEND.vercel.app"   # set after step 3, then redeploy backend
