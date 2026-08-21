@@ -1,182 +1,181 @@
 # TaskFlow — Task Management System
 
-Full-stack **Task Management** app built for the assessment:
-- **Frontend:** Next.js 15 (App Router) + TypeScript + Tailwind CSS v4
-- **Backend:** NestJS 11 + Prisma 6 + SQLite (swappable to Postgres)
-- **Auth:** Guest Login (JWT Bearer) + user-scoped tasks
-- **Themes:** Light / Dark / System — persisted in `localStorage`, applied before hydration to avoid flash
+Full-stack task management app built for the Full Stack Developer technical assessment.
 
-> Figma fidelity placeholder — final pixels will be matched once screenshots are provided. Theme switcher and layout are already built to be pixel-perfect swappable.
-
----
-
-## ✨ Features
-
-- **Guest Login** — optional username (`/api/auth/guest` → JWT). No password. Scoped per guest `user.id`.
-- **Tasks CRUD** — create / read / update / delete / bulk status / reorder.
-- **Fields:** title, description, status (`TODO`/`IN_PROGRESS`/`DONE`), priority (`LOW`/`MEDIUM`/`HIGH`), category, tags[], dueDate, order.
-- **Kanban + List views**, search, status/priority/category filters, client-side sorting.
-- **Stats** (`/api/tasks/stats`) — totals by status.
-- **Validation** — `class-validator` on backend, `ValidationPipe` with `whitelist + transform`.
-- **Reusable UI** — `Button`, `Input`, `Textarea`, `Select`, `Badge`, `Card`, `Dialog`, `TaskCard`, `KanbanColumn`, `TaskDialog`, `Header`, `ThemeToggle`.
-- **Responsive** — mobile-first, grid/stack breakpoints, scrollable kanban on small screens.
-- **Project structure** — clean separation: `modules/prisma`, `modules/auth`, `modules/tasks`, `common/guards`, `common/decorators`.
+| | |
+|---|---|
+| **Frontend** | Next.js 15 (App Router), TypeScript, Tailwind CSS v4 |
+| **Backend** | NestJS 11, Prisma 6, TypeScript |
+| **Database** | PostgreSQL |
+| **Auth** | Guest login, JWT bearer tokens |
+| **Live demo** | _replace this line with the deployed URL before submitting_ |
 
 ---
 
-## 🗂️ Monorepo Structure
+## Features
 
-```
-Task/
-├── frontend/               # Next.js App Router
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx  # Geist font, Header, theme hydration script
-│   │   │   ├── page.tsx    # Landing + authed board/list
-│   │   │   ├── login/page.tsx
-│   │   │   └── globals.css # Tailwind v4 + custom dark variant
-│   │   ├── components/
-│   │   │   ├── ui/         # Button, Input, Card, Badge, Dialog...
-│   │   │   ├── layout/     # Header, ThemeProvider, ThemeToggle
-│   │   │   └── tasks/      # TaskCard, TaskDialog, KanbanColumn, TaskFilters
-│   │   ├── lib/            # utils.cn, api (axios + JWT interceptor)
-│   │   ├── stores/         # zustand: auth, tasks, theme
-│   │   └── types/          # Task, Stats, User
-│   └── .env.local          # NEXT_PUBLIC_API_URL
-│
-├── backend/                # NestJS
-│   ├── prisma/
-│   │   ├── schema.prisma   # User, Task, enums — SQLite file:./dev.db
-│   │   └── migrations/
-│   ├── src/
-│   │   ├── main.ts         # helmet, cors, ValidationPipe, global prefix /api, JwtAuthGuard via APP_GUARD
-│   │   ├── app.module.ts
-│   │   ├── config/configuration.ts
-│   │   ├── common/
-│   │   │   ├── decorators/ # @Public, @CurrentUser
-│   │   │   └── guards/     # JwtAuthGuard (respects @Public)
-│   │   └── modules/
-│   │       ├── prisma/     # PrismaService (global)
-│   │       ├── auth/       # guestLogin, me, JwtStrategy
-│   │       └── tasks/      # CRUD, search, stats, reorder, DTOs
-│   └── .env                # DATABASE_URL, JWT_SECRET, PORT, FRONTEND_URL
-│
-└── README.md
-```
+**Auth**
+- Guest login with an optional display name — no password. A workspace and JWT are issued on first request, and all data is scoped to that guest's `user.id`.
+- Token persisted in `localStorage`; an axios interceptor attaches it and redirects to `/login` on `401`.
+
+**Tasks**
+- Full CRUD, plus bulk status update and drag-and-drop reordering.
+- Fields: title, description, status (`TODO` / `IN_PROGRESS` / `DONE` / `ON_HOLD`), priority (`NONE` / `LOW` / `MEDIUM` / `HIGH` / `URGENT`), category, tags, due date, order, project.
+- **Kanban board** with drag-and-drop across and within columns (`@dnd-kit`), backed by an optimistic local reorder that reconciles with the API.
+- **List view** as an alternative layout, with a Fields menu to toggle visible columns.
+- **Task detail panel** with inline editing, subtasks and comments.
+- Search, status / priority / category filters, and a stats endpoint.
+
+**Projects**
+- CRUD for projects; tasks can be assigned to a project, and each project has its own task page.
+
+**Theming**
+- Light / Dark / System modes plus six accent colors (Amber, Blue, Pink, Rose, Emerald, Black).
+- Persisted in `localStorage` and re-applied by a blocking inline script in `layout.tsx`, so there is no flash of the wrong theme on refresh.
+- System mode subscribes to `prefers-color-scheme` and follows OS changes live.
+
+**Responsive**
+- Mobile-first layout: collapsible sidebar, horizontally scrollable board on small screens, stacked forms and dialogs.
 
 ---
 
-## 🚀 Quick Start
+## Getting started
 
-### Prereqs
-Node 18+ (tested on 22), npm.
+Requires Node 20+ and a PostgreSQL database.
 
-### 1) Backend
+### Backend
 
 ```bash
 cd backend
 npm install
-# env is already committed as .env for assessment convenience
-npx prisma migrate dev --name init
+cp .env.example .env          # then set DATABASE_URL and JWT_SECRET
+npx prisma migrate deploy     # apply the schema
 npx prisma generate
-npm run start:dev   # http://localhost:4000/api  (+ /api/health)
-# or
-npm run build && npm run start:prod
+npm run start:dev             # http://localhost:4000/api
 ```
 
-**Env (`backend/.env`)**
+`backend/.env`:
+
 ```
-DATABASE_URL="file:./dev.db"
-JWT_SECRET="super-secret-jwt-key-change-in-production-please-use-strong-random"
+DATABASE_URL="postgres://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require&connection_limit=10&pool_timeout=20"
+JWT_SECRET="a-long-random-string"
 JWT_EXPIRES_IN="7d"
 PORT=4000
 FRONTEND_URL="http://localhost:3000"
 ```
-To use **PostgreSQL**, change `datasource db { provider = "postgresql" }` in `prisma/schema.prisma` and set `DATABASE_URL` to your Postgres URL, then `npx prisma migrate dev`.
 
-### 2) Frontend
+Managed Postgres providers (Aiven, Neon, Supabase) need `?sslmode=require`. `connection_limit` is set below the provider's connection cap because Prisma's default pool is `cpus * 2 + 1`, which can exceed a small plan's limit.
+
+### Frontend
 
 ```bash
 cd frontend
 npm install
-# env
-echo "NEXT_PUBLIC_API_URL=http://localhost:4000/api" > .env.local
-npm run dev     # http://localhost:3000
-npm run build && npm run start
+cp .env.example .env.local    # NEXT_PUBLIC_API_URL=http://localhost:4000/api
+npm run dev                   # http://localhost:3000
 ```
 
+Or run both from the repo root with `npm run dev`.
+
 ---
 
-## 🔌 API Reference
+## API
 
-**Base URL:** `http://localhost:4000/api`
+Base URL: `http://localhost:4000/api`. All routes require `Authorization: Bearer <token>` unless marked public — a global `JwtAuthGuard` is registered via `APP_GUARD` and opts out through the `@Public()` decorator.
 
 | Method | Path | Auth | Description |
-|--------|------|------|-------------|
+|---|---|---|---|
 | `GET` | `/health` | public | Health check |
-| `POST` | `/auth/guest` | public | Body `{ username?: string }` → `{ accessToken, user }` |
-| `GET` | `/auth/me` | bearer | Current user |
+| `GET` | `/` | public | API name and version |
+| `POST` | `/auth/guest` | public | `{ username? }` → `{ accessToken, user }` |
+| `GET` | `/auth/me` | bearer | Current user profile |
+| `GET` | `/users/me` | bearer | Current user |
+| `PATCH` | `/users/me` | bearer | Update name, title, username, email, avatar, color mode |
+| `DELETE` | `/users/me` | bearer | Leave workspace (cascades to tasks) |
 | `POST` | `/tasks` | bearer | Create task |
-| `GET` | `/tasks?search=&status=&priority=&category=&sortBy=&sortOrder=&page=&limit=` | bearer | List (user-scoped) + meta |
-| `GET` | `/tasks/stats` | bearer | `{ total, todo, inProgress, done, highPriority }` |
-| `GET` | `/tasks/:id` | bearer | Get one |
-| `PATCH` | `/tasks/:id` | bearer | Update (partial) |
-| `PATCH` | `/tasks/bulk/status` | bearer | Body `{ ids: string[], status }` |
-| `PATCH` | `/tasks/reorder` | bearer | Body `{ orderedIds: string[] }` |
+| `GET` | `/tasks` | bearer | List with `search`, `status`, `priority`, `category`, `projectId`, `sortBy`, `sortOrder`, `page`, `limit`, `withRelations` |
+| `GET` | `/tasks/stats` | bearer | Counts by status and priority |
+| `PATCH` | `/tasks/bulk/status` | bearer | `{ ids: string[], status }` |
+| `PATCH` | `/tasks/reorder` | bearer | `{ orderedIds: string[] }` |
+| `GET` | `/tasks/:id` | bearer | One task with subtasks and comments |
+| `PATCH` | `/tasks/:id` | bearer | Partial update |
 | `DELETE` | `/tasks/:id` | bearer | Delete |
+| `GET` | `/tasks/:taskId/subtasks` | bearer | List subtasks |
+| `POST` | `/tasks/:taskId/subtasks` | bearer | Create subtask |
+| `PATCH` | `/tasks/:taskId/subtasks/:id` | bearer | Update subtask |
+| `DELETE` | `/tasks/:taskId/subtasks/:id` | bearer | Delete subtask |
+| `GET` | `/tasks/:taskId/comments` | bearer | List comments |
+| `POST` | `/tasks/:taskId/comments` | bearer | Add comment |
+| `DELETE` | `/tasks/:taskId/comments/:id` | bearer | Delete comment |
+| `POST` | `/projects` | bearer | Create project |
+| `GET` | `/projects` | bearer | List with `search`, `priority` |
+| `GET` | `/projects/:id` | bearer | Project with its tasks |
+| `PATCH` | `/projects/:id` | bearer | Partial update |
+| `DELETE` | `/projects/:id` | bearer | Delete |
 
-Auth header: `Authorization: Bearer <JWT>`.
-
-**DTOs** are validated via `class-validator`; errors return `400` with details.
-
----
-
-## 🎨 Theme
-
-- Toggle in header: `Light / Dark / System`.
-- Stored in `localStorage["theme"]`, resolved `light|dark` applied as `document.documentElement` class + `data-theme` attr + `style.colorScheme`.
-- Hydration-safe inline script in `layout.tsx` prevents flash.
-- Tailwind v4 uses `@custom-variant dark (&:where(.dark, .dark *));` so `dark:` works via class strategy.
-
----
-
-## 🧩 Frontend Notes
-
-- **State:** Zustand stores (`auth-store`, `task-store`, `theme-store`).
-- **HTTP:** `lib/api.ts` axios instance with request interceptor → adds Bearer token, response interceptor → 401 logout+redirect.
-- **UX:** board vs list view, Kanban columns, quick status switcher on cards, `TaskDialog` for create/edit, `TaskFilters` with debounced search.
-- **Styling:** Tailwind v4 + `clsx`+`tailwind-merge` (`cn`), `class-variance-authority` for variants, `lucide-react` icons, `date-fns`.
-- **Reusability:** all UI primitives are isolated in `components/ui` and consumed across tasks/layout.
+Every request body is a `class-validator` DTO behind a global `ValidationPipe` (`whitelist: true`, `transform: true`), so unknown properties are stripped and invalid input returns `400` with field-level messages. Query strings are validated the same way.
 
 ---
 
-## ☁️ Deployment
+## Architecture
 
-- **Frontend:** Vercel (set `NEXT_PUBLIC_API_URL` to your backend URL).
-- **Backend:** Railway / Render / Fly / Vercel Functions. For SQLite on ephemeral FS, prefer Postgres in prod (swap provider). Run `prisma migrate deploy` on deploy.
-- Keep both URLs public and repo public for 45+ days (per brief).
+```
+backend/
+├── prisma/
+│   ├── schema.prisma        # User, Project, Task, Subtask, Comment + enums
+│   └── migrations/
+└── src/
+    ├── main.ts              # helmet, CORS, ValidationPipe, /api prefix, global JwtAuthGuard
+    ├── config/              # typed env configuration
+    ├── common/
+    │   ├── decorators/      # @Public, @CurrentUser
+    │   └── guards/          # JwtAuthGuard (honours @Public)
+    └── modules/
+        ├── prisma/          # PrismaService (global module)
+        ├── auth/            # guest login, JWT strategy
+        ├── users/           # profile read/update/delete
+        ├── tasks/           # tasks + nested subtasks and comments
+        └── projects/
+
+frontend/src/
+├── app/                     # App Router: /, /login, /profile, /projects, /projects/[id]
+├── components/
+│   ├── ui/                  # Avatar, Badge, Button, Card, Dialog, Input, Select, Textarea
+│   ├── app/                 # Sidebar, Topbar, BoardColumn, BoardCard, ListView, TaskDetail, FieldsMenu, Toast, Splash
+│   ├── tasks/               # TaskDialog, TaskFilters
+│   ├── projects/            # ProjectDialog
+│   └── layout/              # ThemeProvider, ThemeToggle
+├── stores/                  # Zustand: auth, tasks, projects, theme
+├── lib/                     # axios client, error formatting, cn(), motion presets
+└── types/                   # shared domain types
+```
+
+**Notes on a few decisions**
+
+- **Prisma types over hand-written shapes.** Service layers use `Prisma.TaskUpdateInput` and friends rather than `any` payload objects, so a schema change surfaces as a compile error.
+- **`tags` is a JSON string column.** Tasks store tags as serialised JSON and the service maps it to a `string[]` at the API boundary, keeping the wire format array-shaped.
+- **Render-time state seeding.** Dialogs and the detail panel seed their form from props during render (React's documented adjust-state-on-prop-change pattern) instead of `useEffect` + `setState`, which avoids a cascading second render on every open.
+- **One `Avatar` primitive.** Avatar URLs are arbitrary user-supplied strings, which `next/image` cannot pre-authorise via `remotePatterns`, so a plain `<img>` is used in a single wrapper rather than at seven call sites.
 
 ---
 
-## 📸 Figma → Code
+## Quality
 
-- Figma link: https://www.figma.com/design/obONCFmoTFN27V5H9PHS2X/Assessment-Task
-- **Status:** core layout + theme + auth + CRUD are complete and responsive. Detailed pixel pass (spacing, typography, illustrations, motion) will be applied as soon as you share the exported screens/assets — the component system is ready to slot in Figma tokens in one pass (colors, radius, shadows, fonts via `globals.css` + `tailwind` theme).
+```bash
+cd backend  && npx tsc --noEmit && npx eslint "src/**/*.ts" && npm test
+cd frontend && npx tsc --noEmit && npx eslint src
+```
 
----
-
-## 🧪 Part 2 — AbleSpace "Take Data" (to be added)
-
-Will be added to `/docs/part2.md` once assessment of the Caseload → Take Data flow is complete (or shared separately).
+Both packages typecheck and lint clean.
 
 ---
 
-## 📝 Commits
+## Part 2 — AbleSpace "Take Data" walkthrough
 
-Make many small meaningful commits (the repo is freshly initialized with your first meaningful commit; keep it going). The `.gitignore` for both apps is already set.
+See [`docs/part2.md`](docs/part2.md).
 
 ---
 
 ## License
 
-UNLICENSED (assessment).
+UNLICENSED — submitted as a technical assessment.
