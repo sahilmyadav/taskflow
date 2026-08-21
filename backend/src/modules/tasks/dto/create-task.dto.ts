@@ -1,16 +1,27 @@
-import { IsOptional, IsString, IsEnum, IsDateString, IsArray, MaxLength, Length } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsDateString,
+  IsArray,
+  MaxLength,
+  Length,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum TaskStatusDto {
   TODO = 'TODO',
   IN_PROGRESS = 'IN_PROGRESS',
   DONE = 'DONE',
+  ON_HOLD = 'ON_HOLD',
 }
 
 export enum PriorityDto {
+  NONE = 'NONE',
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
+  URGENT = 'URGENT',
 }
 
 export class CreateTaskDto {
@@ -44,6 +55,10 @@ export class CreateTaskDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string;
+
+  @IsOptional()
+  @IsString()
+  projectId?: string;
 
   @IsOptional()
   @Type(() => Number)

@@ -1,9 +1,11 @@
-import { IsOptional, IsEnum, IsString, IsDateString } from 'class-validator';
+import { IsOptional, IsEnum, IsString } from 'class-validator';
+import { PriorityDto } from './create-task.dto';
 
 export enum QueryStatus {
   TODO = 'TODO',
   IN_PROGRESS = 'IN_PROGRESS',
   DONE = 'DONE',
+  ON_HOLD = 'ON_HOLD',
 }
 
 export class QueryTaskDto {
@@ -20,8 +22,8 @@ export class QueryTaskDto {
   category?: string;
 
   @IsOptional()
-  @IsString()
-  priority?: string;
+  @IsEnum(PriorityDto)
+  priority?: PriorityDto;
 
   @IsOptional()
   @IsString()
@@ -38,4 +40,12 @@ export class QueryTaskDto {
   @IsOptional()
   @IsString()
   limit?: string;
+
+  @IsOptional()
+  @IsString()
+  projectId?: string;
+
+  @IsOptional()
+  @IsString()
+  withRelations?: string;
 }
