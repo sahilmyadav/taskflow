@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/layout/theme-provider';
+import { InlineScript } from '@/components/layout/inline-script';
 import { THEME_INIT_SCRIPT } from '@/lib/theme-script';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
@@ -28,12 +29,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Applies the stored theme before first paint. Must live in <head> and
-            outside any Client Component — React never executes <script> tags
-            rendered inside a client subtree. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Applies the saved theme while the browser parses the document, before
+            the first paint. It must sit in <head> and outside any Client
+            Component — React never executes <script> tags it renders on the
+            client. next/script's beforeInteractive is not a substitute: it is
+            meant for external scripts and explicitly does not block paint. */}
+        <InlineScript html={THEME_INIT_SCRIPT} />
       </head>
-      <body className="min-h-full bg-[#f6f6f5] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
+      <body
+        suppressHydrationWarning
+        className="min-h-full bg-[#f6f6f5] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50"
+      >
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
