@@ -18,6 +18,7 @@ import { Toaster, useToastStore } from '@/components/app/toast';
 import { Button } from '@/components/ui/button';
 import { Plus, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { BrandMark } from '@/components/brand/brand-mark';
 import {
   DndContext,
   closestCenter,
@@ -145,9 +146,8 @@ export default function HomePage() {
         setOverColumn(overTask.status);
         return;
       }
-      const colFromData = (
-        e.over?.data?.current as { status?: Task['status'] } | undefined
-      )?.status;
+      const colFromData = (e.over?.data?.current as { status?: Task['status'] } | undefined)
+        ?.status;
       if (colFromData && (COLUMNS as string[]).includes(colFromData)) {
         setOverColumn(colFromData);
         return;
@@ -229,10 +229,8 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-0 grid-bg opacity-[0.04]" />
         <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col">
           <div className="flex h-14 items-center justify-between px-4">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">
-                ◆
-              </span>{' '}
+            <div className="flex items-center gap-2.5 text-sm font-semibold">
+              <BrandMark size={28} rounded={8} />
               TaskFlow
             </div>
             <Link href="/login">
