@@ -13,6 +13,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTaskDto } from './dto/query-task.dto';
 import { BulkStatusDto } from './dto/bulk-status.dto';
+import { ReorderTasksDto } from './dto/reorder-tasks.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('tasks')
@@ -40,10 +41,7 @@ export class TasksController {
   }
 
   @Patch('reorder')
-  reorder(
-    @CurrentUser() user: { id: string },
-    @Body() body: { orderedIds: string[] },
-  ) {
+  reorder(@CurrentUser() user: { id: string }, @Body() body: ReorderTasksDto) {
     return this.tasksService.reorder(user.id, body.orderedIds);
   }
 
